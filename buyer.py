@@ -43,11 +43,23 @@ async def poll_and_buy(page: Page) -> None:
     deadline = time.time() + 30  # 最多轮询 30 秒
 
     while time.time() < deadline:
-        # 刷新页面
-        try:
-            await page.reload(wait_until="domcontentloaded", timeout=5_000)
-        except PlaywrightTimeout:
-            pass  # 网络抖动，继续重试
+        # 如果被重定向到限流页，直接导航回商品页
+        if "rate-limit" in page.url:
+            try:
+                await page.goto(config.PRODUCT_URL, wait_until="domcontentloaded", timeout=5_000)
+            except PlaywrightTimeout:
+                pass
+        else:
+            # 正常刷新
+            try:
+                await page.reload(wait_until="domcontentloaded", timeout=5_000)
+            except PlaywrightTimeout:
+                pass  # 网络抖动，继续重试
+
+        # "访问人数较多"提示 → 继续轮询，不停止
+        if await page.locator("text=当前访问人数较多").count() > 0:
+            await asyncio.sleep(config.POLL_INTERVAL_MS / 1000)
+            continue
 
         # 检查是否售罄
         for text in SOLD_OUT_TEXTS:
