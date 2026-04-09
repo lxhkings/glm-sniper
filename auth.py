@@ -2,7 +2,7 @@
 import asyncio
 from playwright.async_api import Page
 
-LOGIN_URL = "https://open.bigmodel.cn/login"
+LOGIN_URL = "https://bigmodel.cn/login"
 
 async def login(page: Page, phone: str, password: str) -> None:
     """

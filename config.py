@@ -13,7 +13,7 @@ if not GLM_PASSWORD:
     raise ValueError("GLM_PASSWORD 未设置，请检查 .env 文件")
 
 # 目标商品页 URL（根据实际页面调整）
-PRODUCT_URL = "https://open.bigmodel.cn/console/plan"
+PRODUCT_URL = "https://bigmodel.cn/glm-coding"
 
 # 开售时间：北京时间 10:00:00
 SALE_HOUR = 10
