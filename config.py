@@ -1,16 +1,12 @@
 # config.py
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
+# 要抢的套餐名称（页面卡片标题开头文字，区分大小写）
+# 可选值: "Lite" | "Pro" | "Max"
+PLAN_NAME = "Lite"
 
-GLM_PHONE: str = os.getenv("GLM_PHONE", "")
-GLM_PASSWORD: str = os.getenv("GLM_PASSWORD", "")
-
-if not GLM_PHONE:
-    raise ValueError("GLM_PHONE 未设置，请检查 .env 文件")
-if not GLM_PASSWORD:
-    raise ValueError("GLM_PASSWORD 未设置，请检查 .env 文件")
+# 订阅周期（页面 Tab 上的关键字，匹配即可）
+# 可选值: "包月" | "包季" | "包年"
+PLAN_PERIOD = "包年"
 
 # 目标商品页 URL（根据实际页面调整）
 PRODUCT_URL = "https://bigmodel.cn/glm-coding?utm_source=bigModel&utm_medium=Special&utm_content=glm-code&utm_campaign=Platform_Ops&_channel_track_key=8BAeCdUS"

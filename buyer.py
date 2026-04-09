@@ -67,14 +67,31 @@ async def poll_and_buy(page: Page) -> None:
                 print(f'[✗] 检测到"{text}"，本次未抢到')
                 return
 
-        # 查找购买按钮
-        for text in BUY_BUTTON_TEXTS:
-            btn = page.locator(f"button:has-text('{text}'):not([disabled])")
-            if await btn.count() > 0:
-                print(f'[✓] 找到按钮"{text}"，立刻点击！')
-                await btn.first.click()
-                await _proceed_to_order(page)
-                return
+        # 切换到目标周期 Tab（包月/包季/包年）
+        await page.evaluate(f"""() => {{
+            const tabs = Array.from(document.querySelectorAll('.switch-tab-item'));
+            const tab = tabs.find(t => t.textContent.includes('{config.PLAN_PERIOD}'));
+            if (tab && !tab.classList.contains('active')) tab.click();
+        }}""")
+
+        # 查找目标套餐的购买按钮（精确匹配 PLAN_NAME 所在卡片）
+        clicked = await page.evaluate(f"""() => {{
+            const cards = Array.from(document.querySelectorAll('.package-card'));
+            const target = cards.find(c => c.textContent.trim().startsWith('{config.PLAN_NAME}'));
+            if (!target) return 'no_card';
+            const btn = Array.from(target.querySelectorAll('button'))
+                .find(b => !b.disabled && b.textContent.includes('订阅'));
+            if (!btn) return 'no_btn';
+            btn.click();
+            return 'clicked';
+        }}""")
+        if clicked == 'clicked':
+            print(f'[✓] 找到 {config.PLAN_PERIOD} {config.PLAN_NAME} 套餐按钮，立刻点击！')
+            await _proceed_to_order(page)
+            return
+        elif clicked == 'no_btn':
+            # 按钮存在但被禁用（尚未开售），继续等待
+            pass
 
         await asyncio.sleep(config.POLL_INTERVAL_MS / 1000)
 

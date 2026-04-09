@@ -25,8 +25,8 @@ async def main():
         page = await context.new_page()
 
         # 登录
-        print(f"\n[→] 正在登录账号 {config.GLM_PHONE}...")
-        await login(page, config.GLM_PHONE, config.GLM_PASSWORD)
+        print("\n[→] 打开登录页，请用微信扫码...")
+        await login(page)
 
         # 导航到商品页
         print(f"[→] 导航到商品页：{config.PRODUCT_URL}")

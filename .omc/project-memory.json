@@ -1,0 +1,113 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1775693622676,
+  "projectRoot": "/Users/xiaohongliang/projects/glm-sniper",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {},
+  "hotPaths": [
+    {
+      "path": "buyer.py",
+      "accessCount": 7,
+      "lastAccessed": 1775699967265,
+      "type": "file"
+    },
+    {
+      "path": "config.py",
+      "accessCount": 5,
+      "lastAccessed": 1775699950790,
+      "type": "file"
+    },
+    {
+      "path": "auth.py",
+      "accessCount": 4,
+      "lastAccessed": 1775699923346,
+      "type": "file"
+    },
+    {
+      "path": "tests/test_config.py",
+      "accessCount": 3,
+      "lastAccessed": 1775697750227,
+      "type": "file"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-04-09-glm-sniper.md",
+      "accessCount": 2,
+      "lastAccessed": 1775696800699,
+      "type": "file"
+    },
+    {
+      "path": "requirements.txt",
+      "accessCount": 2,
+      "lastAccessed": 1775697663000,
+      "type": "file"
+    },
+    {
+      "path": ".env.example",
+      "accessCount": 2,
+      "lastAccessed": 1775697663097,
+      "type": "file"
+    },
+    {
+      "path": "utils.py",
+      "accessCount": 2,
+      "lastAccessed": 1775697814338,
+      "type": "file"
+    },
+    {
+      "path": "tests/test_utils.py",
+      "accessCount": 2,
+      "lastAccessed": 1775697814371,
+      "type": "file"
+    },
+    {
+      "path": "sniper.py",
+      "accessCount": 2,
+      "lastAccessed": 1775697967659,
+      "type": "file"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-04-09-glm-sniper-design.md",
+      "accessCount": 1,
+      "lastAccessed": 1775696359374,
+      "type": "file"
+    },
+    {
+      "path": ".env",
+      "accessCount": 1,
+      "lastAccessed": 1775696858747,
+      "type": "file"
+    },
+    {
+      "path": "tests/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1775697703586,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
