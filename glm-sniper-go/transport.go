@@ -15,7 +15,9 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"net"
+	"net/http"
 	"net/url"
 	"strings"
 	"sync"
@@ -112,10 +114,11 @@ func NewTransport() *http2.Transport {
 
 // ConnectionPool 连接池，用于预热和复用 TLS 连接
 type ConnectionPool struct {
-	mu       sync.Mutex
-	conns    []net.Conn
-	baseURL  *url.URL
+	mu        sync.Mutex
+	conns     []net.Conn
+	baseURL   *url.URL
 	transport *http2.Transport
+	client    *http.Client // 用于心跳请求
 }
 
 // NewConnectionPool 创建连接池
@@ -123,10 +126,11 @@ type ConnectionPool struct {
 // 参数：
 //   - transport: HTTP/2 Transport
 //   - baseURL: 目标服务器基础 URL
+//   - client: HTTP 客户端，用于心跳请求
 //
 // 返回：
 //   - *ConnectionPool: 连接池实例
-func NewConnectionPool(transport *http2.Transport, baseURL string) (*ConnectionPool, error) {
+func NewConnectionPool(transport *http2.Transport, baseURL string, client *http.Client) (*ConnectionPool, error) {
 	parsedURL, err := url.Parse(baseURL)
 	if err != nil {
 		return nil, fmt.Errorf("解析 URL 失败: %w", err)
@@ -136,6 +140,7 @@ func NewConnectionPool(transport *http2.Transport, baseURL string) (*ConnectionP
 		conns:     make([]net.Conn, 0),
 		baseURL:   parsedURL,
 		transport: transport,
+		client:    client,
 	}, nil
 }
 
@@ -208,23 +213,64 @@ func (p *ConnectionPool) KeepAlive(ctx context.Context, interval time.Duration) 
 }
 
 // sendHeartbeat 发送心跳请求
+//
+// 向 /api/biz/product/isLimitBuy 发送 GET 请求，保持连接活跃
+// 如果心跳失败（连接被服务端关闭），重新建立新连接
 func (p *ConnectionPool) sendHeartbeat() {
+	// 构建心跳 URL
+	heartbeatURL := p.baseURL.Scheme + "://" + p.baseURL.Host + "/api/biz/product/isLimitBuy"
+
+	// 创建请求上下文，设置超时
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, heartbeatURL, nil)
+	if err != nil {
+		// 请求创建失败
+		return
+	}
+
+	// 发送心跳请求
+	resp, err := p.client.Do(req)
+	if err != nil {
+		// 心跳失败，连接可能被服务端关闭
+		// 尝试重新建立连接
+		p.reconnect()
+		return
+	}
+	defer resp.Body.Close()
+
+	// 读取响应体，确保连接完全处理
+	io.Copy(io.Discard, resp.Body)
+
+	// 检查响应状态码
+	if resp.StatusCode >= 500 {
+		// 服务端错误，可能需要重连
+		p.reconnect()
+	}
+}
+
+// reconnect 重新建立一条连接
+func (p *ConnectionPool) reconnect() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	// 检查连接是否仍然活跃
-	// 如果连接已关闭，从池中移除
-	var activeConns []net.Conn
-	for _, conn := range p.conns {
-		// 简单检查：尝试设置读取超时
-		// 如果连接已关闭，这会失败
-		if err := conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond)); err == nil {
-			// 重置超时
-			conn.SetReadDeadline(time.Time{})
-			activeConns = append(activeConns, conn)
-		}
+	// 地址格式：host:port
+	addr := p.baseURL.Host
+	if !strings.Contains(addr, ":") {
+		// 如果没有端口，默认使用 443
+		addr = addr + ":443"
 	}
-	p.conns = activeConns
+
+	// 建立新连接
+	conn, err := dialTLSWithUTLS(context.Background(), "tcp", addr, nil)
+	if err != nil {
+		// 重连失败
+		return
+	}
+
+	// 添加到连接池
+	p.conns = append(p.conns, conn)
 }
 
 // Close 关闭连接池中的所有连接
@@ -250,6 +296,7 @@ func (p *ConnectionPool) Size() int {
 // 参数：
 //   - transport: HTTP/2 Transport
 //   - baseURL: 目标服务器基础 URL (如 https://bigmodel.cn)
+//   - client: HTTP 客户端，用于心跳请求
 //   - preloadSeconds: 提前多少秒预热
 //   - connCount: 预热连接数量
 //
@@ -260,15 +307,16 @@ func (p *ConnectionPool) Size() int {
 //
 // 使用示例：
 //
-//	pool, cancel, err := PreWarmConnections(transport, "https://bigmodel.cn", 30, 3)
+//	client := &http.Client{Transport: transport}
+//	pool, cancel, err := PreWarmConnections(transport, "https://bigmodel.cn", client, 30, 3)
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
 //	defer cancel()
 //	defer pool.Close()
-func PreWarmConnections(transport *http2.Transport, baseURL string, preloadSeconds int, connCount int) (*ConnectionPool, context.CancelFunc, error) {
+func PreWarmConnections(transport *http2.Transport, baseURL string, client *http.Client, preloadSeconds int, connCount int) (*ConnectionPool, context.CancelFunc, error) {
 	// 创建连接池
-	pool, err := NewConnectionPool(transport, baseURL)
+	pool, err := NewConnectionPool(transport, baseURL, client)
 	if err != nil {
 		return nil, nil, err
 	}
