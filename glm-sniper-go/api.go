@@ -111,7 +111,7 @@ func (c *Client) IsLimitBuy(ctx context.Context) (bool, error) {
 	}
 
 	// 检查业务状态码
-	if result.Code != 0 && !result.Success {
+	if result.Code != 0 || !result.Success {
 		return false, fmt.Errorf("API 返回错误: code=%d, msg=%s", result.Code, result.Msg)
 	}
 
@@ -171,7 +171,7 @@ func (c *Client) PayPreview(ctx context.Context, planCode, payType string) (stri
 	}
 
 	// 检查业务状态码
-	if result.Code != 0 && !result.Success {
+	if result.Code != 0 || !result.Success {
 		return "", fmt.Errorf("API 返回错误: code=%d, msg=%s", result.Code, result.Msg)
 	}
 
@@ -240,7 +240,7 @@ func (c *Client) CreateSign(ctx context.Context, bizId, payType, agreementNo str
 	}
 
 	// 检查业务状态码
-	if result.Code != 0 && !result.Success {
+	if result.Code != 0 || !result.Success {
 		return "", "", fmt.Errorf("API 返回错误: code=%d, msg=%s", result.Code, result.Msg)
 	}
 
