@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"sort"
+	"sync/atomic"
 	"time"
 
 	"github.com/beevik/ntp"
@@ -14,8 +15,9 @@ import (
 // beijingLoc 北京时区 (Asia/Shanghai)
 var beijingLoc *time.Location
 
-// ntpOffset 存储 NTP 时间偏差（正值表示本机偏快）
-var ntpOffset time.Duration
+// ntpOffset 存储 NTP 时间偏差（正值表示本机偏快），单位纳秒
+// 使用 int64 + atomic 实现线程安全
+var ntpOffset int64
 
 func init() {
 	var err error
@@ -37,8 +39,9 @@ func GetNTPOffset() (offset time.Duration, err error) {
 	}
 
 	// ClockOffset: 正值表示本地时钟比 NTP 时钟快
-	ntpOffset = response.ClockOffset
-	return ntpOffset, nil
+	// 使用 atomic 存储纳秒值，确保线程安全
+	atomic.StoreInt64(&ntpOffset, int64(response.ClockOffset))
+	return response.ClockOffset, nil
 }
 
 // MeasureRTT 测量到目标主机 443 端口的 TCP RTT
@@ -109,7 +112,9 @@ func MeasureRTTWithContext(ctx context.Context, host string) (rtt time.Duration,
 func BeiJingNow() time.Time {
 	// 当前时间减去 NTP 偏差（正值表示本机偏快，需要减去）
 	// 然后转换为北京时间
-	return time.Now().Add(-ntpOffset).In(beijingLoc)
+	// 使用 atomic 读取，确保线程安全
+	offset := time.Duration(atomic.LoadInt64(&ntpOffset))
+	return time.Now().Add(-offset).In(beijingLoc)
 }
 
 // FireAt 计算 RTT 补偿后的开火时刻
