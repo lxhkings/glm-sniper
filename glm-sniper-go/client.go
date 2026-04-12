@@ -108,18 +108,3 @@ func (c *Client) GetToken() string {
 func (c *Client) SetToken(token string) {
 	c.token = token
 }
-
-// Close 关闭客户端，释放资源
-//
-// 说明：
-//   - 关闭底层 Transport 的连接池
-//   - 调用后不应再使用此客户端
-func (c *Client) Close() error {
-	// http.Client 没有直接的 Close 方法
-	// 但可以通过关闭 Transport 来释放连接
-	// 由于我们使用的是 http2.Transport，
-	// 需要转型后访问底层连接（如有必要可扩展）
-	// 目前只需让 GC 回收即可
-	c.httpClient = nil
-	return nil
-}
