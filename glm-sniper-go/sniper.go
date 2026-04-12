@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os/exec"
 	"runtime"
@@ -174,11 +175,11 @@ func (s *Sniper) Run(ctx context.Context) error {
 
 	if atomic.LoadInt32(&success) == 1 {
 		fmt.Println("[INFO] ===== 抢购成功！=====")
+		return nil
 	} else {
 		fmt.Println("[INFO] ===== 抢购结束（未成功）=====")
+		return errors.New("抢购失败：未成功下单")
 	}
-
-	return nil
 }
 
 // doOrder 执行下单流程
@@ -236,7 +237,7 @@ func (s *Sniper) openBrowser(url string) {
 	case "darwin":
 		cmd = exec.Command("open", url)
 	case "windows":
-		cmd = exec.Command("start", "", url)
+		cmd = exec.Command("cmd", "/c", "start", "", url)
 	case "linux":
 		cmd = exec.Command("xdg-open", url)
 	default:
