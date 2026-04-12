@@ -28,9 +28,18 @@ async def main():
         print("\n[→] 打开登录页，请用微信扫码...")
         await login(page)
 
+        # 登录成功后暂停，让用户导出 token
+        print("\n[✓] 登录成功！")
+        print("[!] 请在浏览器 Console 执行以下命令复制 token：")
+        print("    copy(decodeURIComponent(document.cookie.match(/bigmodel_token_production=([^;]+)/)[1]))")
+        print("[!] 然后粘贴到 glm-sniper-go/config.yaml 的 token 字段")
+        print("[!] 如果只要导出 token，现在可以 Ctrl+C 退出")
+        await asyncio.sleep(10)  # 暂停 10 秒让用户有时间操作
+        print("[→] 继续...")
+
         # 导航到商品页
         print(f"[→] 导航到商品页：{config.PRODUCT_URL}")
-        await page.goto(config.PRODUCT_URL, wait_until="networkidle")
+        await page.goto(config.PRODUCT_URL, wait_until="domcontentloaded")
 
         # 等待开售时间
         await wait_until_ready()

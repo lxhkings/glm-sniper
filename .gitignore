@@ -12,3 +12,6 @@ config.json
 secret.py
 *.png
 .gstack/
+
+# Go 版配置（含 token）
+glm-sniper-go/config.yaml
