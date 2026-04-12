@@ -1,0 +1,28 @@
+# GLM Sniper Go 配置文件示例
+# 复制此文件为 config.yaml 并填入实际值
+
+# JWT Token - 从浏览器 Cookie 中 bigmodel_token_production 导出
+token: "eyJhbGci..."
+
+# 套餐选择: lite / pro / max
+plan_code: "lite"
+
+# 支付方式: alipay / wechat
+pay_type: "alipay"
+
+# 业务 ID - 留空则运行时自动从 product/info 接口获取
+biz_id: ""
+
+# 开售时间 (北京时间)
+sale_hour:   10
+sale_minute: 0
+sale_second: 0
+
+# 提前多少秒开始轮询
+preload_seconds: 30
+
+# 轮询间隔 (毫秒)
+poll_interval_ms: 50
+
+# 并发 goroutine 数
+workers: 5
